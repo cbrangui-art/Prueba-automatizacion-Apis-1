@@ -1,0 +1,11 @@
+# Archivos que NO se suben a GitHub
+
+# Carpetas basura de Python
+__pycache__/
+*.pyc
+
+# Carpetas basura de Pytest
+.pytest_cache/
+
+# Reportes generados (se generan cada vez que corres los tests)
+reporte.html
