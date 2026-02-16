@@ -41,6 +41,12 @@ def test_obtener_todos_los_posts():
     assert isinstance(post['title'], str)
     assert isinstance(post['body'], str)
 
+    print(f"\n✅ Status: {response.status_code}")
+    print(f"⏱️ Tiempo de respuesta: {tiempo:.3f}s")
+    print(f"📦 Total de posts: {len(data)}")
+    print(f"📝 Primer post: id={post['id']}, userId={post['userId']}")
+    print(f"   Título: {post['title'][:50]}...")
+
 # --- PRUEBA 2: OBTENER UN POST ESPECÍFICO ---
 def test_obtener_un_post_especifico():
     url = f"{BASE_URL}/posts/1"
@@ -50,13 +56,20 @@ def test_obtener_un_post_especifico():
     assert response.status_code == 200
     
     # 2. VALIDACIÓN DE TIEMPO (< 2 segundos)
-    assert response.elapsed.total_seconds() < 2.0, "Error: Muy lento"
+    tiempo = response.elapsed.total_seconds()
+    assert tiempo < 2.0, "Error: Muy lento"
     
     data = response.json()
     
     # 3. Validar ID y Título
     assert data['id'] == 1, "Error: ID incorrecto"
     assert len(data['title']) > 0, "Error: Título vacío"
+
+    print(f"\n✅ Status: {response.status_code}")
+    print(f"⏱️ Tiempo de respuesta: {tiempo:.3f}s")
+    print(f"📝 Post id={data['id']}")
+    print(f"   Título: {data['title']}")
+    print(f"   userId: {data['userId']}")
 
 # --- PRUEBA 3: CREAR UN POST ---
 def test_crear_un_post():
@@ -73,12 +86,19 @@ def test_crear_un_post():
     assert response.status_code == 201, "Error: No se creó (201)"
     
     # 2. VALIDACIÓN DE TIEMPO (< 2 segundos)
-    assert response.elapsed.total_seconds() < 2.0, "Error: Muy lento"
+    tiempo = response.elapsed.total_seconds()
+    assert tiempo < 2.0, "Error: Muy lento"
     
     data = response.json()
     
     # 3. Validar que tenga ID
     assert 'id' in data, "Error: No devolvió ID"
+
+    print(f"\n✅ Status: {response.status_code}")
+    print(f"⏱️ Tiempo de respuesta: {tiempo:.3f}s")
+    print(f"📝 Post creado con id={data['id']}")
+    print(f"   Título: {data.get('title', 'N/A')}")
+    print(f"   Body: {data.get('body', 'N/A')}")
 
     #####################################
 # --- PRUEBA 4: VALIDAR POST INEXISTENTE ---
@@ -95,3 +115,8 @@ def test_validar_post_inexistente():
     # 4. Validar que la respuesta esté vacía (no encontró el post)
     data = response.json()
     assert data == {}, "Error: La respuesta debería estar vacía"
+
+    print(f"\n✅ Status: {response.status_code} (Not Found)")
+    print(f"⏱️ Tiempo de respuesta: {response.elapsed.total_seconds():.3f}s")
+    print(f"📝 Respuesta vacía: {data}")
+    print(f"   El post /posts/999999 no existe (correcto)")
