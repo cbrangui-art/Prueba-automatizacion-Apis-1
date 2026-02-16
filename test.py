@@ -1,13 +1,25 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import pytest
 
 # URL BASE
 BASE_URL = "https://jsonplaceholder.typicode.com"
 
+# Sesión reutilizable con reintentos automáticos
+session = requests.Session()
+retries = Retry(total=3, backoff_factor=0.5)
+session.mount("https://", HTTPAdapter(max_retries=retries))
+
+# Warmup: precalentar conexión TCP+TLS antes de las pruebas
+@pytest.fixture(autouse=True, scope="session")
+def warmup():
+    session.get(f"{BASE_URL}/posts/1")
+
 # --- PRUEBA 1: OBTENER TODOS LOS POSTS ---
 def test_obtener_todos_los_posts():
     url = f"{BASE_URL}/posts"
-    response = requests.get(url)
+    response = session.get(url)
     
     # 1. Validar Status 200
     assert response.status_code == 200, "Error: Status no es 200"
@@ -32,7 +44,7 @@ def test_obtener_todos_los_posts():
 # --- PRUEBA 2: OBTENER UN POST ESPECÍFICO ---
 def test_obtener_un_post_especifico():
     url = f"{BASE_URL}/posts/1"
-    response = requests.get(url)
+    response = session.get(url)
     
     # 1. Validar Status 200
     assert response.status_code == 200
@@ -55,7 +67,7 @@ def test_crear_un_post():
         "userId": 1
     }
     
-    response = requests.post(url, json=payload)
+    response = session.post(url, json=payload)
     
     # 1. Validar Status 201
     assert response.status_code == 201, "Error: No se creó (201)"
@@ -67,3 +79,19 @@ def test_crear_un_post():
     
     # 3. Validar que tenga ID
     assert 'id' in data, "Error: No devolvió ID"
+
+    #####################################
+# --- PRUEBA 4: VALIDAR POST INEXISTENTE ---
+def test_validar_post_inexistente():
+    # 1. Buscamos un post que NO existe
+    url = f"{BASE_URL}/posts/999999"
+    
+    # 2. Hacemos la petición
+    response = session.get(url)
+    
+    # 3. Debe devolver 404 
+    assert response.status_code == 404, "Error: Se esperaba status 404 (Not Found)"
+    
+    # 4. Validar que la respuesta esté vacía (no encontró el post)
+    data = response.json()
+    assert data == {}, "Error: La respuesta debería estar vacía"
